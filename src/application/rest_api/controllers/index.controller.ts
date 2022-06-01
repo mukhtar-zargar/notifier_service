@@ -13,7 +13,7 @@ export class AppController extends BaseController {
       res,
       Result.ok({
         author: "Mukhtar Zargar",
-        service: "Generic Service",
+        service: "Notifier Service",
         version: "0.0.1",
         ping: true
       })
