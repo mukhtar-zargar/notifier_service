@@ -10,6 +10,11 @@ import { TYPES } from "../../application/constants/types";
 import { Logger } from "../logging/pino";
 
 import "../../application/rest_api/controllers/index.controller";
+import { DomainConsumerMessagingRepositoryKafka } from "../messaging/kafka/consumer";
+import { KafkaConfiguration } from "../messaging/kafka/configuration";
+import { AppSettings } from "../../settings.ts/app.settings";
+import userConsumer from "../../application/consumers/user.consumer";
+import postConsumer from "../../application/consumers/post.consumer";
 
 export async function bootstrap(
   container: Container,
@@ -41,6 +46,17 @@ export async function bootstrap(
     });
 
     try {
+      const consumer = new DomainConsumerMessagingRepositoryKafka(
+        KafkaConfiguration.getKafkaConfiguration({
+          KAFKA_BROKERS: [AppSettings.KAFKA_BROKER],
+          KAFKA_SASL_USERNAME: AppSettings.KAFKA_SASL_USERNAME || "dummy",
+          KAFKA_SASL_PASSWORD: AppSettings.KAFKA_SASL_PASSWORD || "pass",
+          KAFKA_CONNECTION_TIMEOUT: 5000,
+          KAFKA_CERTIFICATE_BASE64: "122"
+        })
+      );
+
+      consumer.subscribe([...userConsumer, ...postConsumer]);
 
       const app = server.build();
       app.listen(port, () => {
