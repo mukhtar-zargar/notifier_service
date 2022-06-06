@@ -1,6 +1,7 @@
 import { v4 } from "uuid";
 
 export interface IntegrationEventRecord<T = any> {
+  value: T;
   eventId: string;
   eventSource: string;
   dateTimeOccurred: Date;
@@ -47,13 +48,7 @@ export abstract class IntegrationEvent implements IIntegrationEvent {
 
   abstract flatten(): IntegrationEventRecord;
 
-  constructor(
-    eventType: string,
-    eventSource: string,
-    domainCorrelationId: string,
-    context: any,
-    key?: string
-  ) {
+  constructor(eventType: string, eventSource: string, domainCorrelationId: string, context: any, key?: string) {
     this.domainCorrelationId = domainCorrelationId;
     this.eventType = eventType;
     this.eventSource = eventSource;

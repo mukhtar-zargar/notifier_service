@@ -1,10 +1,5 @@
-import {
-  IIntegrationEventHandlerResponse,
-  IntegrationEventRecord
-} from "../integration_event_record";
+import { IIntegrationEventHandlerResponse, IntegrationEventRecord } from "../integration_event_record";
 
-export interface IIntegrationEventHandler {
-  handle(
-    event: IntegrationEventRecord
-  ): Promise<IIntegrationEventHandlerResponse>;
+export interface IIntegrationEventHandler<T> {
+  handle: (event: IntegrationEventRecord<T>) => Promise<IIntegrationEventHandlerResponse>;
 }

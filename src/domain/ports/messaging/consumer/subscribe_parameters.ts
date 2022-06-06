@@ -4,7 +4,7 @@ export interface SubscriptionParameters {
   eventTypes?: string[];
   topic: string;
   readFromBeginning?: boolean;
-  handles: IIntegrationEventHandler;
+  handles: IIntegrationEventHandler<any>;
   handlerRetryPolicy?: {
     attempts: number;
     delay: number;
