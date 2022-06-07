@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import { createClient, RedisClientType } from "redis";
 
-import { ICacheRepository } from "../../../domain/ports/caching/cache_repository_interface";
+import { ICacheRepository, ICacheRepositoryOptions } from "../../../domain/ports/caching/cache_repository_interface";
 import { IRedisConfiguration } from "./configuration";
 
 @injectable()
@@ -30,54 +30,77 @@ export class CacheRedisRepository implements ICacheRepository {
     return allKeys.length;
   }
 
+  /**
+   * Note: It handles only set and string redis data types for now
+   * @param type Type of data
+   * @returns All values of that data type
+   */
+  async getTypedValues(type: string, options: ICacheRepositoryOptions): Promise<string[]> {
+    let result = [];
+    let cursor = 0;
+
+    do {
+      const res = await this._redisClient.scan(cursor, { TYPE: type });
+      cursor = res.cursor;
+
+      result = result.concat(res.keys);
+    } while (cursor !== 0);
+
+    let values = [];
+
+    if (result.length === 0) {
+      return values;
+    }
+
+    result = result.filter((el) => !options?.exclude?.includes(el));
+
+    if (type === "set") {
+      for (let item of result) {
+        const tempValues = await this.getSetMembers(item);
+        values = values.concat(tempValues);
+      }
+    } else {
+      const tempValues = await this._redisClient.mGet(result);
+      values = values.concat(tempValues);
+    }
+
+    return values;
+  }
+
   async exists(key: string): Promise<boolean> {
     const r = await this.count(key);
 
     return r >= 1 ? true : false;
   }
 
-  async getOne(key: string): Promise<string> {
-    const r = await this._redisClient.get(key);
-
-    console.log("getOne Redis Res", r);
-    return r;
+  getOne(key: string): Promise<string> {
+    return this._redisClient.get(key);
   }
 
-  async setOne(key: string, value: any, ttl?: number): Promise<void> {
-    const r = await this._redisClient.set(key, value, {
+  setOne(key: string, value: any, ttl?: number): void {
+    this._redisClient.set(key, value, {
       EX: ttl,
       NX: true
     });
-    console.log("setOne Redis Res", r);
   }
 
-  async deleteOne(key: string): Promise<number> {
-    const r = await this._redisClient.del(key);
-    console.log("deleteOne Redis Res", r);
-    return r;
+  deleteOne(key: string): Promise<number> {
+    return this._redisClient.del(key);
   }
 
-  async addToSet(key: string, value: any): Promise<number> {
-    const r = await this._redisClient.sAdd(key, value);
-    console.log("addToSet Redis Res", r);
-    return r;
+  addToSet(key: string, value: any): Promise<number> {
+    return this._redisClient.sAdd(key, value);
   }
 
-  async existsInSet(key: string, value: any): Promise<boolean> {
-    const r = await this._redisClient.sIsMember(key, value);
-    console.log("existsInSet Redis Res", r);
-    return r;
+  existsInSet(key: string, value: any): Promise<boolean> {
+    return this._redisClient.sIsMember(key, value);
   }
 
-  async getSetMembers(key: string): Promise<string[]> {
-    const r = await this._redisClient.sMembers(key);
-    console.log("getSetMembers Redis Res", r);
-    return r;
+  getSetMembers(key: string): Promise<string[]> {
+    return this._redisClient.sMembers(key);
   }
 
-  async deleteSetMember(key: string, value: any): Promise<number> {
-    const r = await this._redisClient.sRem(key, value);
-    console.log("deleteSetMember Redis Res", r);
-    return r;
+  deleteSetMember(key: string, value: any): Promise<number> {
+    return this._redisClient.sRem(key, value);
   }
 }

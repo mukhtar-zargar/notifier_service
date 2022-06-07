@@ -27,6 +27,10 @@ class PostConsumer {
         handle: async (event: IntegrationEventRecord<IPostProps>) => {
           this.logger.info(`Post created ${JSON.stringify(event.value)}`);
           // Get user player ids from this.cacheRepository
+
+          const allUserPlayerIds = await this.cacheRepository.getTypedValues("set", { exclude: [event.value.id] });
+          this.logger.info(`Player ids to send notification to: ${allUserPlayerIds.toString()}`);
+
           // Notify other users except creator that post has been created
           return {
             handled: true
@@ -44,7 +48,7 @@ class PostConsumer {
       handles: {
         async handle(event: IntegrationEventRecord<IPostProps>) {
           // Get user player ids from this.cacheRepository
-          // Notify other users except creator that post has been created
+          // Notify other users except creator that post has been updated
           this.logger.info(`Post Updated ${JSON.stringify(event)}`);
           return {
             handled: true

@@ -26,9 +26,12 @@ class UserConsumer {
       handles: {
         handle: async (event: IntegrationEventRecord<IUserProps>) => {
           this.logger.info(`User Signed Up ${JSON.stringify(event.value)}`);
+          const allUserPlayerIds = await this.cacheRepository.getTypedValues("set", { exclude: [event.value.id] });
+          this.logger.info(`Player ids to send notification to: ${allUserPlayerIds.toString()}`);
+
           await this.cacheRepository.addToSet(event.value.id, event.value.playerId);
 
-          // Now get all users and notify them about a new user signing up
+          // notify "allUserPlayerIds" about a new user signing up via preferred notification service (one signal, firebase, etc)
 
           return {
             handled: true
@@ -63,7 +66,6 @@ class UserConsumer {
       handles: {
         handle: async (event: IntegrationEventRecord<IUserProps>) => {
           this.logger.info(`User updated profile ${JSON.stringify(event.value)}`);
-          await this.cacheRepository.addToSet(event.value.id, event.value.playerId);
 
           return {
             handled: true
