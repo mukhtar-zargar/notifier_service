@@ -16,11 +16,7 @@ import { AppSettings } from "../../settings.ts/app.settings";
 import userConsumer from "../../application/consumers/user.consumer";
 import postConsumer from "../../application/consumers/post.consumer";
 
-export async function bootstrap(
-  container: Container,
-  port: number,
-  ...modules: ContainerModule[]
-) {
+export async function bootstrap(container: Container, port: number, ...modules: ContainerModule[]) {
   if (!container.isBound(TYPES.App)) {
     container.load(...modules);
     const logger = container.get<Logger>(TYPES.Logger).get();
